@@ -37,10 +37,9 @@ start "LocalLens API Server" cmd /k "call .venv\Scripts\activate.bat && python a
 echo [SYSTEM] Backend is booting up. Please wait 4 seconds...
 timeout /t 4 /nobreak > nul
 
-echo.
 echo [SYSTEM] Launching 3D Interface...
-:: 4. Open the HTML file in the default web browser
-start index.html
+:: 4. Open the web interface as a Native Desktop App
+start msedge.exe --app="http://127.0.0.1:8000" 2>nul || start chrome.exe --app="http://127.0.0.1:8000" 2>nul || start http://127.0.0.1:8000
 
 echo.
 echo [SUCCESS] System is live!

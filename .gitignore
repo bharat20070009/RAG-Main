@@ -14,3 +14,9 @@ __pycache__/
 .env
 # Private Chat History
 chats.json
+
+# IDEs and Node
+.idea/
+node_modules/
+mobile_app/node_modules/
+

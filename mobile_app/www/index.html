@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg-body: #050505;
@@ -500,36 +500,39 @@
     <!-- SETUP REQUIREMENTS OVERLAY -->
     <div id="setup-overlay" class="name-overlay hidden">
         <div class="name-box" style="text-align: left; max-width: 450px;">
-            <h2 style="text-align: center; margin-bottom: 1.5rem;">First Time Setup Check</h2>
-            <p style="margin-bottom: 1.5rem; color: var(--text-muted);">Please verify that your system meets the requirements to run LocalLens offline.</p>
+            <h2 style="text-align: center; margin-bottom: 1.5rem;">System Diagnostics</h2>
+            <p style="margin-bottom: 1.5rem; color: var(--text-muted);">Checking system requirements for Air-Gap AI...</p>
             
             <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem;">
-                <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer;">
-                    <input type="checkbox" id="check-ollama" onchange="verifySetup()" style="margin-top: 4px; width: 16px; height: 16px;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div id="status-ram" style="width: 20px; text-align: center;">⏳</div>
                     <div>
-                        <div style="font-weight: 600; color: var(--text-main);">Ollama is Installed & Running</div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">The Ollama backend must be active in your system tray.</div>
+                        <div style="font-weight: 600; color: var(--text-main);">Hardware Requirements</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Checking available RAM...</div>
                     </div>
-                </label>
+                </div>
                 
-                <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer;">
-                    <input type="checkbox" id="check-model" onchange="verifySetup()" style="margin-top: 4px; width: 16px; height: 16px;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div id="status-ollama" style="width: 20px; text-align: center;">⏳</div>
                     <div>
-                        <div style="font-weight: 600; color: var(--text-main);">Llama 3.2 is Downloaded</div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">Run <code>ollama pull llama3.2</code> in your terminal.</div>
+                        <div style="font-weight: 600; color: var(--text-main);">Ollama Engine</div>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Waiting for Ollama to start...</div>
                     </div>
-                </label>
+                </div>
                 
-                <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer;">
-                    <input type="checkbox" id="check-ram" onchange="verifySetup()" style="margin-top: 4px; width: 16px; height: 16px;">
-                    <div>
-                        <div style="font-weight: 600; color: var(--text-main);">Hardware Requirements Met</div>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">At least 8GB of RAM available for local AI processing.</div>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div id="status-model" style="width: 20px; text-align: center;">⏳</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: var(--text-main);">Llama 3.2 Model</div>
+                        <div id="model-desc" style="font-size: 0.8rem; color: var(--text-muted);">Checking installed models...</div>
+                        <div id="progress-bar-container" class="hidden" style="width: 100%; height: 6px; background: #333; border-radius: 3px; margin-top: 6px; overflow: hidden;">
+                            <div id="progress-bar-fill" style="width: 0%; height: 100%; background: #3b82f6; transition: width 0.3s;"></div>
+                        </div>
                     </div>
-                </label>
+                </div>
             </div>
             
-            <button id="btn-complete-setup" onclick="completeSetup()" disabled style="background: var(--pill-hover); color: var(--text-muted); width: 100%; transition: all 0.3s;">Verify & Proceed</button>
+            <button id="btn-complete-setup" disabled style="background: var(--pill-hover); color: var(--text-muted); width: 100%; transition: all 0.3s;">Initializing...</button>
         </div>
     </div>
 
@@ -545,6 +548,25 @@
         </div>
     </div>
 
+    <!-- NOTEBOOK MODAL OVERLAY -->
+    <div id="notebook-overlay" class="name-overlay hidden">
+        <div class="name-box" style="text-align: left; max-width: 500px;">
+            <h2 style="margin-bottom: 0.5rem; color: #fff;">Create New Notebook</h2>
+            <p style="margin-bottom: 1.5rem; color: var(--text-muted); font-size: 0.9rem;">Organize your analysis by giving it a specific focus.</p>
+            
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Notebook Title</label>
+            <input type="text" id="nb-title-input" placeholder="e.g. Q3 Financial Audit" style="margin-bottom: 1.5rem;">
+            
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 0.9rem;">Notebook Focus (System Instructions)</label>
+            <input type="text" id="nb-focus-input" placeholder="e.g. Focus exclusively on extracting revenue numbers..." style="margin-bottom: 1.5rem;">
+            
+            <div style="display: flex; gap: 1rem;">
+                <button onclick="document.getElementById('notebook-overlay').classList.add('hidden')" style="background: rgba(255, 255, 255, 0.1); color: var(--text-main);">Cancel</button>
+                <button onclick="submitNewNotebook()" style="background: var(--accent-color); color: #fff;">Create Notebook</button>
+            </div>
+        </div>
+    </div>
+
     <div class="app-window">
         
         <aside class="sidebar">
@@ -553,17 +575,33 @@
                 <div class="logo-text">LocalLens</div>
             </div>
             
-            <div style="padding: 0 1.5rem; margin-top: 1rem;">
-                <button onclick="startNewChat()" style="width: 100%; background: transparent; border: 1px solid var(--border-color); color: var(--text-main); padding: 0.75rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500; transition: background 0.2s; font-size: 0.9rem;" onmouseover="this.style.background='var(--pill-hover)'" onmouseout="this.style.background='transparent'">
+            <div style="padding: 0 1.5rem; margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                <button onclick="document.getElementById('notebook-overlay').classList.remove('hidden')" style="width: 100%; background: var(--pill-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 0.75rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500; transition: background 0.2s; font-size: 0.9rem;" onmouseover="this.style.background='var(--pill-hover)'" onmouseout="this.style.background='var(--pill-bg)'">
                     <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                    New chat
+                    New Notebook
+                </button>
+                <button onclick="startNewChat()" style="width: 100%; background: transparent; border: 1px solid var(--border-color); color: var(--text-muted); padding: 0.6rem; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 500; transition: background 0.2s; font-size: 0.85rem;" onmouseover="this.style.background='var(--pill-hover)'" onmouseout="this.style.background='transparent'">
+                    <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    New Conversation
                 </button>
             </div>
             
-            <div class="section-title" style="margin-top: 1.5rem;">Previous Chats</div>
+            <div class="section-title" style="margin-top: 1.5rem;">My Notebooks</div>
             
-            <div class="sidebar-content" id="chat-list" style="margin-bottom: 1rem; max-height: 200px; min-height: 50px;">
+            <div class="sidebar-content" id="notebook-list" style="margin-bottom: 0.5rem; max-height: 150px; min-height: 20px;">
+                <!-- Notebook pills generated here -->
+            </div>
+
+            <div class="section-title">Conversations</div>
+            
+            <div class="sidebar-content" id="chat-list" style="margin-bottom: 1rem; max-height: 150px; min-height: 20px;">
                 <!-- Chat pills generated here -->
+            </div>
+
+            <div class="section-title">Executive Briefings</div>
+            
+            <div class="sidebar-content" id="briefings-list" style="margin-bottom: 0.5rem; max-height: 150px; min-height: 20px;">
+                <!-- Briefing pills generated here -->
             </div>
 
             <div class="section-title">Knowledge Base</div>
@@ -600,6 +638,11 @@
                     <select id="memory-filter" class="filter-select">
                         <option value="All Documents">Select Target Document</option>
                     </select>
+
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-muted); font-size: 0.85rem; font-weight: 600; margin-left: auto;">
+                        <input type="checkbox" id="airlock-toggle" style="width: 16px; height: 16px; accent-color: #ef4444;">
+                        <span>Air-Lock (Web Search)</span>
+                    </label>
                 </div>
 
                 <div class="search-box">
@@ -611,6 +654,11 @@
                         </button>
                         <input type="file" id="file-upload-input" onchange="handleFileUpload(event)" accept=".pdf,.txt,.md,.jpg,.jpeg,.png,.docx,.xlsx,.pptx,.csv">
                     </div>
+
+                    <!-- Voice Mic Button -->
+                    <button class="btn-upload" id="btn-mic" onclick="toggleVoice()" title="Voice Dictation" style="margin-right: 0;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                    </button>
 
                     <input type="text" id="chat-input" placeholder="Ask AI to analyze your document..." onkeypress="handleKeyPress(event)" autocomplete="off">
                     
@@ -703,44 +751,92 @@
             // Helper to format bold text and newlines
             function formatText(t) { return t.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>'); }
             
-            // Helper to escape HTML to prevent Mermaid parsing errors while preserving newlines
             function escapeHtml(unsafe) {
-                return unsafe
-                     .replace(/&/g, "&amp;")
-                     .replace(/</g, "&lt;")
-                     .replace(/>/g, "&gt;")
-                     .replace(/"/g, "&quot;")
-                     .replace(/'/g, "&#039;");
+                return unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
             }
             
-            // Detect and parse Mermaid.js code blocks
             let htmlContent = "";
-            let parts = text.split(/```mermaid/i);
+            let remainingText = text;
+
+            // Simple parser for different blocks
+            const blocks = remainingText.split(/(```mermaid|```chart|```python)/i);
             
-            htmlContent += formatText(parts[0]);
+            htmlContent += formatText(blocks[0]);
             
-            for(let i=1; i<parts.length; i++) {
-                let subParts = parts[i].split(/```/);
-                let mermaidCode = escapeHtml(subParts[0].trim());
+            for (let i = 1; i < blocks.length; i += 2) {
+                const type = blocks[i].toLowerCase();
+                const subParts = blocks[i+1].split(/```/);
+                const code = subParts[0].trim();
                 
-                // Wrap the extracted code in a mermaid PRE tag (PRE preserves newlines required by Mermaid)
-                htmlContent += `<pre class="mermaid">${mermaidCode}</pre>`;
+                if (type === '```mermaid') {
+                    htmlContent += `<pre class="mermaid">${escapeHtml(code)}</pre>`;
+                } else if (type === '```chart') {
+                    const canvasId = 'chart-' + Math.random().toString(36).substr(2, 9);
+                    htmlContent += `<div style="background: #ffffff; padding: 1rem; border-radius: 12px; margin: 1rem 0;"><canvas id="${canvasId}" data-config='${escapeHtml(code)}'></canvas></div>`;
+                } else if (type === '```python') {
+                    htmlContent += `<div style="background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 8px; margin: 1rem 0; font-family: monospace; overflow-x: auto; position: relative;">
+                        <pre style="margin: 0;">${escapeHtml(code)}</pre>
+                        <button onclick="runPython(this)" style="position: absolute; top: 8px; right: 8px; background: #3b82f6; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Run Code</button>
+                    </div>`;
+                }
                 
-                // Add any remaining text after the code block
-                if(subParts.length > 1) {
+                if (subParts.length > 1) {
                     htmlContent += formatText(subParts.slice(1).join('```'));
                 }
             }
             
+            // Add TTS Speaker Button for bot
+            if (sender === 'bot' || sender === 'assistant') {
+                const plainText = text.replace(/```[\s\S]*?```/g, '').replace(/<[^>]*>?/gm, ''); // strip code and html
+                htmlContent += `<button onclick="speakText('${escapeHtml(plainText.replace(/'/g, "\\'"))}')" style="background: transparent; border: none; color: var(--text-muted); cursor: pointer; display: block; margin-top: 8px;" title="Read Aloud">🔊 Read Aloud</button>`;
+            }
+
             msgDiv.innerHTML = htmlContent;
             chatMessages.appendChild(msgDiv);
             chatMessages.scrollTop = chatMessages.scrollHeight;
             
-            // Command the browser to render the flowchart SVG if one exists in this message
-            if (parts.length > 1) {
-                try { await mermaid.run({ nodes: msgDiv.querySelectorAll('.mermaid') }); } 
-                catch(e) { console.error("Flowchart generation error:", e); }
+            // Render Mermaid
+            if (text.toLowerCase().includes('```mermaid')) {
+                try { await mermaid.run({ nodes: msgDiv.querySelectorAll('.mermaid') }); } catch(e) {}
             }
+            
+            // Render Charts
+            const canvases = msgDiv.querySelectorAll('canvas[id^="chart-"]');
+            canvases.forEach(canvas => {
+                try {
+                    const config = JSON.parse(canvas.getAttribute('data-config'));
+                    new Chart(canvas, config);
+                } catch(e) {
+                    console.error("Chart generation error:", e);
+                }
+            });
+        }
+        
+        function speakText(text) {
+            if (!('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+        
+        async function runPython(btn) {
+            const code = btn.previousElementSibling.innerText;
+            btn.innerText = "Running...";
+            btn.disabled = true;
+            try {
+                const response = await fetch(`${API_URL}/execute`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
+                });
+                const data = await response.json();
+                appendMessage(`**Code Output:**\n${data.output}`, 'bot');
+            } catch(e) {
+                appendMessage(`**Error:** Failed to execute code.`, 'bot');
+            }
+            btn.innerText = "Run Code";
+            btn.disabled = false;
         }
 
         async function fetchAvailableDocuments() {
@@ -755,14 +851,99 @@
                 if (bootOverlay) {
                     bootOverlay.classList.add('hidden');
                     // Check setup and name after boot finishes
-                    setTimeout(() => {
-                        let setupComplete = localStorage.getItem('setupComplete');
-                        if (!setupComplete) {
-                            document.getElementById('setup-overlay').classList.remove('hidden');
-                        } else {
-                            showNamePrompt();
-                        }
-                    }, 600); // Wait for boot overlay fade out
+                                            setTimeout(async () => {
+                            let setupComplete = false; // FORCE SETUP FOR TESTING
+                            if (!setupComplete) {
+                                document.getElementById('setup-overlay').classList.remove('hidden');
+                                
+                                // Automatically verify via backend
+                                try {
+                                    const sysResp = await fetch(`${API_URL}/system-check`);
+                                    const checks = await sysResp.json();
+                                    
+                                    // RAM Check
+                                    const stRam = document.getElementById('status-ram');
+                                    if (checks.ram_ok) {
+                                        stRam.innerText = '✅';
+                                    } else {
+                                        stRam.innerText = '❌';
+                                    }
+                                    
+                                    // Ollama Check
+                                    const stOllama = document.getElementById('status-ollama');
+                                    if (checks.ollama_running) {
+                                        stOllama.innerText = '✅';
+                                    } else {
+                                        stOllama.innerText = '❌';
+                                        document.getElementById('btn-complete-setup').innerText = "Ollama is not running. Please start it.";
+                                        return;
+                                    }
+                                    
+                                    // Model Check & Download
+                                    const stModel = document.getElementById('status-model');
+                                    const modelDesc = document.getElementById('model-desc');
+                                    const pbContainer = document.getElementById('progress-bar-container');
+                                    const pbFill = document.getElementById('progress-bar-fill');
+                                    const btn = document.getElementById('btn-complete-setup');
+                                    
+                                    if (checks.llama_downloaded) {
+                                        stModel.innerText = '✅';
+                                        modelDesc.innerText = 'Llama 3.2 is ready.';
+                                        btn.innerText = "All Checks Passed! Starting...";
+                                        setTimeout(completeSetup, 1500);
+                                    } else {
+                                        // Start Download!
+                                        modelDesc.innerText = 'Downloading Llama 3.2...';
+                                        pbContainer.classList.remove('hidden');
+                                        btn.innerText = "Downloading AI Model...";
+                                        
+                                        try {
+                                            const pullResp = await fetch(`${API_URL}/pull-model`);
+                                            const reader = pullResp.body.getReader();
+                                            const decoder = new TextDecoder();
+                                            
+                                            while (true) {
+                                                const { done, value } = await reader.read();
+                                                if (done) break;
+                                                
+                                                const lines = decoder.decode(value).split('\\n');
+                                                for (let line of lines) {
+                                                    if (!line.trim()) continue;
+                                                    try {
+                                                        const pData = JSON.parse(line);
+                                                        if (pData.completed && pData.total) {
+                                                            const percent = Math.round((pData.completed / pData.total) * 100);
+                                                            pbFill.style.width = `${percent}%`;
+                                                            modelDesc.innerText = `Downloading Llama 3.2: ${percent}%`;
+                                                        } else if (pData.status) {
+                                                            modelDesc.innerText = pData.status;
+                                                        }
+                                                    } catch(e){}
+                                                }
+                                            }
+                                            
+                                            // Done!
+                                            pbFill.style.width = '100%';
+                                            stModel.innerText = '✅';
+                                            modelDesc.innerText = 'Llama 3.2 downloaded successfully!';
+                                            btn.innerText = "All Checks Passed! Starting...";
+                                            setTimeout(completeSetup, 1500);
+                                            
+                                        } catch(e) {
+                                            stModel.innerText = '❌';
+                                            modelDesc.innerText = 'Failed to download model.';
+                                            btn.innerText = "Setup Failed.";
+                                        }
+                                    }
+                                    
+                                } catch(e) {
+                                    console.log("System check failed", e);
+                                    document.getElementById('btn-complete-setup').innerText = "System check failed to connect to backend.";
+                                }
+                            } else {
+                                showNamePrompt();
+                            }
+                        }, 600); // Wait for boot overlay fade out
                 }
             } catch (error) {
                 statusIndicator.innerHTML = '🟡 AI Engine is booting up... Please wait.';
@@ -780,24 +961,7 @@
             }
         }
 
-        function verifySetup() {
-            const ollama = document.getElementById('check-ollama').checked;
-            const model = document.getElementById('check-model').checked;
-            const ram = document.getElementById('check-ram').checked;
-            const btn = document.getElementById('btn-complete-setup');
-            
-            if (ollama && model && ram) {
-                btn.disabled = false;
-                btn.style.background = 'var(--text-main)';
-                btn.style.color = '#050505';
-                btn.style.cursor = 'pointer';
-            } else {
-                btn.disabled = true;
-                btn.style.background = 'var(--pill-hover)';
-                btn.style.color = 'var(--text-muted)';
-                btn.style.cursor = 'default';
-            }
-        }
+        
 
         function completeSetup() {
             localStorage.setItem('setupComplete', 'true');
@@ -829,7 +993,9 @@
 
         function updateUIChats(chats) {
             const chatList = document.getElementById('chat-list');
+            const notebookList = document.getElementById('notebook-list');
             chatList.innerHTML = '';
+            notebookList.innerHTML = '';
             
             chats.reverse().forEach(chat => {
                 const pill = document.createElement('div');
@@ -841,11 +1007,16 @@
                 }
                 pill.innerHTML = `
                     <span title="${chat.title}" onclick="loadChat('${chat.chat_id}')" style="flex: 1;">${chat.title}</span>
-                    <button class="delete-btn" onclick="deleteChat(event, '${chat.chat_id}')" title="Delete chat">
+                    <button class="delete-btn" onclick="deleteChat(event, '${chat.chat_id}')" title="Delete">
                         <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                     </button>
                 `;
-                chatList.appendChild(pill);
+                
+                if (chat.focus && chat.focus.trim() !== '') {
+                    notebookList.appendChild(pill);
+                } else {
+                    chatList.appendChild(pill);
+                }
             });
         }
 
@@ -856,11 +1027,23 @@
                     const chat = await response.json();
                     currentChatId = chatId;
                     chatMessages.innerHTML = '';
-                    heroSection.classList.add('hidden');
                     
-                    chat.messages.forEach(msg => {
-                        appendMessage(msg.content, msg.role);
-                    });
+                    if (chat.messages && chat.messages.length > 0) {
+                        heroSection.classList.add('hidden');
+                        chat.messages.forEach(msg => {
+                            appendMessage(msg.content, msg.role);
+                        });
+                    } else {
+                        heroSection.classList.remove('hidden');
+                        document.querySelector('.hero-title').innerText = chat.title || "New Notebook";
+                        if (chat.focus) {
+                            document.querySelector('.hero-subtitle').innerText = "Focus: " + chat.focus;
+                        } else {
+                            let userName = localStorage.getItem('operatorName') || "Operator";
+                            document.querySelector('.hero-subtitle').innerText = "Secure, offline intelligence. How can I help you today?";
+                        }
+                    }
+                    
                     fetchChats();
                 }
             } catch(e) { console.log("Failed to load chat", e); }
@@ -896,6 +1079,47 @@
                     else fetchChats();
                 } catch(e) {}
             });
+        }
+
+        async function fetchBriefings() {
+            try {
+                const response = await fetch(`${API_URL}/briefings`);
+                if (response.ok) {
+                    const data = await response.json();
+                    updateUIBriefings(data);
+                }
+            } catch(e) { console.error("Failed to fetch briefings", e); }
+        }
+
+        function updateUIBriefings(briefings) {
+            const briefingsList = document.getElementById('briefings-list');
+            if(!briefingsList) return;
+            briefingsList.innerHTML = '';
+            
+            Object.keys(briefings).forEach(filename => {
+                const pill = document.createElement('div');
+                pill.className = 'doc-pill';
+                pill.style.cursor = 'pointer';
+                const cleanName = cleanFilename(filename);
+                pill.innerHTML = `<span title="${cleanName}" style="flex: 1;">${cleanName}</span>`;
+                pill.onclick = () => showBriefing(filename, briefings[filename]);
+                briefingsList.appendChild(pill);
+            });
+        }
+        
+        function showBriefing(filename, content) {
+            currentChatId = null;
+            chatMessages.innerHTML = '';
+            heroSection.classList.add('hidden');
+            
+            // Format the content
+            const formatted = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>');
+            
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message bot`;
+            msgDiv.innerHTML = `<h3 style="margin-top:0; color: var(--accent-color);">Executive Briefing: ${cleanFilename(filename)}</h3><div style="font-size: 0.95em; line-height: 1.5;">${formatted}</div>`;
+            
+            chatMessages.appendChild(msgDiv);
         }
 
         function updateUIDocuments(documents) {
@@ -995,6 +1219,7 @@
             
             showThinking();
 
+            const isAirlock = document.getElementById('airlock-toggle').checked;
             try {
                 const response = await fetch(`${API_URL}/chat`, {
                     method: 'POST',
@@ -1003,7 +1228,8 @@
                         message: text, 
                         document_name: selectedDoc,
                         mode: currentMode,
-                        chat_id: currentChatId
+                        chat_id: currentChatId,
+                        airlock_enabled: isAirlock
                     })
                 });
                 removeThinking();
@@ -1124,10 +1350,133 @@
             fetchChats();
         }
 
+        async function submitNewNotebook() {
+            const titleInput = document.getElementById('nb-title-input').value.trim();
+            const focusInput = document.getElementById('nb-focus-input').value.trim();
+            
+            if (!titleInput) {
+                alert("Please provide a title for your notebook.");
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_URL}/notebooks`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: titleInput, focus: focusInput })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('notebook-overlay').classList.add('hidden');
+                    document.getElementById('nb-title-input').value = '';
+                    document.getElementById('nb-focus-input').value = '';
+                    
+                    // Display notebook title in hero section
+                    document.querySelector('.hero-title').innerText = data.title;
+                    if (data.focus) {
+                        document.querySelector('.hero-subtitle').innerText = "Focus: " + data.focus;
+                    } else {
+                        document.querySelector('.hero-subtitle').innerText = "Secure, offline intelligence.";
+                    }
+                    
+                    loadChat(data.chat_id);
+                }
+            } catch(e) {
+                console.error("Failed to create notebook", e);
+            }
+        }
+
+        // OFFLINE VOICE DICTATION (RAW PCM TO BACKEND)
+        let audioContext;
+        let mediaStreamSource;
+        let scriptProcessor;
+        let audioChunks = [];
+        let isDictating = false;
+        
+        async function toggleVoice() {
+            const micBtn = document.getElementById('btn-mic');
+            
+            if (isDictating) {
+                isDictating = false;
+                micBtn.style.color = '#94a3b8';
+                
+                // Stop recording
+                if (scriptProcessor && mediaStreamSource) {
+                    scriptProcessor.disconnect();
+                    mediaStreamSource.disconnect();
+                }
+                
+                chatInput.value = "Transcribing offline... please wait.";
+                
+                // Convert chunks to Float32Array
+                let totalLength = 0;
+                for (let chunk of audioChunks) totalLength += chunk.length;
+                let result = new Float32Array(totalLength);
+                let offset = 0;
+                for (let chunk of audioChunks) {
+                    result.set(chunk, offset);
+                    offset += chunk.length;
+                }
+                
+                // Convert to 16-bit PCM Blob
+                let buffer = new ArrayBuffer(result.length * 2);
+                let view = new DataView(buffer);
+                for (let i = 0; i < result.length; i++) {
+                    let s = Math.max(-1, Math.min(1, result[i]));
+                    view.setInt16(i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+                }
+                
+                const blob = new Blob([buffer], { type: 'application/octet-stream' });
+                
+                const formData = new FormData();
+                formData.append('audio', blob, 'audio.pcm');
+                
+                try {
+                    const response = await fetch(`${API_URL}/transcribe`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const data = await response.json();
+                    chatInput.value = data.text;
+                    if (data.text.trim()) sendMessage();
+                } catch(e) {
+                    chatInput.value = "";
+                    alert("Failed to transcribe audio.");
+                }
+                
+                return;
+            }
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+                mediaStreamSource = audioContext.createMediaStreamSource(stream);
+                scriptProcessor = audioContext.createScriptProcessor(4096, 1, 1);
+                
+                audioChunks = [];
+                isDictating = true;
+                micBtn.style.color = '#ef4444'; // Red
+                chatInput.value = "Listening... Click mic again to stop.";
+                
+                scriptProcessor.onaudioprocess = function(e) {
+                    if (!isDictating) return;
+                    audioChunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+                };
+                
+                mediaStreamSource.connect(scriptProcessor);
+                scriptProcessor.connect(audioContext.destination);
+            } catch (e) {
+                alert("Microphone access denied or unavailable.");
+            }
+        }
+
         window.onload = () => {
             initNeuralCore();
             fetchAvailableDocuments();
             fetchChats();
+            fetchBriefings();
+            setInterval(fetchBriefings, 5000); // Check for new auto-briefings every 5s
         };
     </script>
 </body>
