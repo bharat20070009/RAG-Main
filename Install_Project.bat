@@ -51,17 +51,17 @@ if not exist ".venv\Scripts\activate.bat" (
     python -m venv .venv
 )
 call .venv\Scripts\activate.bat
-pip install -r requirements.txt
+pip install -r backend\requirements.txt
 
 :: Create Desktop Shortcut using PowerShell
 set SCRIPT="%TEMP%\CreateShortcut.vbs"
 echo Set oWS = WScript.CreateObject("WScript.Shell") > %SCRIPT%
 echo sLinkFile = "%USERPROFILE%\Desktop\Air-Gap AI.lnk" >> %SCRIPT%
 echo Set oLink = oWS.CreateShortcut(sLinkFile) >> %SCRIPT%
-echo oLink.TargetPath = "%~dp0Start_LocalLens.bat" >> %SCRIPT%
+echo oLink.TargetPath = "%~dp0Start_Project.bat" >> %SCRIPT%
 echo oLink.WorkingDirectory = "%~dp0" >> %SCRIPT%
 echo oLink.Description = "Launch Air-Gap AI" >> %SCRIPT%
-echo oLink.IconLocation = "%~dp0favicon.ico" >> %SCRIPT%
+echo oLink.IconLocation = "%~dp0frontend\favicon.ico" >> %SCRIPT%
 echo oLink.Save >> %SCRIPT%
 cscript /nologo %SCRIPT%
 del %SCRIPT%

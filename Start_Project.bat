@@ -21,7 +21,7 @@ python -m venv .venv
 
 echo [SETUP] Installing required AI libraries...
 call .venv\Scripts\activate.bat
-pip install -r requirements.txt
+pip install -r backend\requirements.txt
 
 
 ) else (
@@ -32,7 +32,7 @@ echo.
 echo [SYSTEM] Waking up the Python Backend...
 
 :: 3. Start the API server in a NEW persistent window so you can see its logs
-start "LocalLens API Server" cmd /k "call .venv\Scripts\activate.bat && python api_server.py"
+start "LocalLens API Server" cmd /k "call .venv\Scripts\activate.bat && cd backend && python api_server.py"
 
 echo [SYSTEM] Backend is booting up. Please wait 4 seconds...
 timeout /t 4 /nobreak > nul

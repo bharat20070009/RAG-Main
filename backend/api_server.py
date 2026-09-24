@@ -45,23 +45,23 @@ app.mount("/static", StaticFiles(directory="."), name="static")
 
 @app.get("/")
 async def serve_ui():
-    return FileResponse("public/index.html")
+    return FileResponse("../frontend/index.html")
 
-@app.get("/locallens_logo.jpg")
+@app.get("/logo.jpg")
 async def serve_logo():
-    return FileResponse("public/locallens_logo.jpg")
+    return FileResponse("../frontend/logo.jpg")
 
 @app.get("/favicon.ico")
 async def serve_favicon():
-    return FileResponse("public/favicon.ico")
+    return FileResponse("../frontend/favicon.ico")
 
 @app.get("/style.css")
 async def serve_css():
-    return FileResponse("public/style.css")
+    return FileResponse("../frontend/style.css")
 
 @app.get("/script.js")
 async def serve_js():
-    return FileResponse("public/script.js")
+    return FileResponse("../frontend/script.js")
 
 import psutil
 
